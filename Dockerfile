@@ -12,7 +12,7 @@ RUN npm ci --only=production && \
 COPY . .
 
 # Create non-root user and switch to it
-RUN useradd -m -d /usr/src/app -u 1001 appuser && \
+RUN useradd -m -s /bin/false -d /usr/src/app -u 1001 appuser && \
     chown -R appuser:appuser /usr/src/app
 USER appuser
 
