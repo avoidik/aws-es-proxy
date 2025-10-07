@@ -55,11 +55,26 @@ async function execute(endpoint, region, path, headers, method, body) {
     requestHeaders['content-type'] = 'application/json';
   }
 
+  // Parse path and query string for proper signing
+  const pathParts = path.split('?');
+  const pathname = pathParts[0];
+  const queryString = pathParts[1];
+
+  // Build query object from query string
+  const query = {};
+  if (queryString) {
+    queryString.split('&').forEach(param => {
+      const [key, value] = param.split('=');
+      query[key] = value || '';
+    });
+  }
+
   const request = new HttpRequest({
     hostname: parsedUrl.hostname,
     port: backendPort,
     protocol: parsedUrl.protocol,
-    path: path,
+    path: pathname,
+    query: query,
     method: method || 'GET',
     headers: requestHeaders,
     body: body
