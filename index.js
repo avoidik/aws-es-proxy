@@ -1,184 +1,175 @@
-const AWS = require('aws-sdk');
-const co = require('co');
+const { fromNodeProviderChain } = require('@aws-sdk/credential-providers');
+const { SignatureV4 } = require('@smithy/signature-v4');
+const { HttpRequest } = require('@smithy/protocol-http');
+const { Sha256 } = require('@aws-crypto/sha256-js');
+const { NodeHttpHandler } = require('@smithy/node-http-handler');
 const url = require('url');
 const http = require('http');
-const options = require('optimist')
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
+
+const argv = yargs(hideBin(process.argv))
+  .help(false)
+  .version(false)
   .argv;
 
 const context = {};
-const profile = process.env.AWS_PROFILE || options.profile || 'default';
+const profile = process.env.AWS_PROFILE || argv.profile || 'default';
 
-var creds = {};
-AWS.CredentialProviderChain.defaultProviders = [
-  () => { return new AWS.EnvironmentCredentials('AWS'); },
-  () => { return new AWS.EnvironmentCredentials('AMAZON'); },
-  () => { return new AWS.SharedIniFileCredentials({ profile: profile }); },
-  () => { return new AWS.EC2MetadataCredentials(); }
-];
+let creds = {};
 
-var execute = function(endpoint, region, path, headers, method, body) {
+async function execute(endpoint, region, path, headers, method, body) {
+  if(argv.quiet !== true) {
+    console.log('>>>', method, path);
+  }
+
+  const parsedUrl = new URL(`https://${endpoint}`);
+
+  const request = new HttpRequest({
+    hostname: parsedUrl.hostname,
+    port: parsedUrl.port || 443,
+    protocol: parsedUrl.protocol,
+    path: path,
+    method: method || 'GET',
+    headers: {
+      'host': parsedUrl.hostname,
+      'presigned-expires': 'false'
+    },
+    body: body
+  });
+
+  const signer = new SignatureV4({
+    credentials: creds,
+    region: region,
+    service: 'es',
+    sha256: Sha256
+  });
+
+  const signedRequest = await signer.sign(request);
+
+  // Add extra headers from the browser, excluding connection control and transport encoding
+  const keys = Object.keys(headers);
+  for (let i = 0, len = keys.length; i < len; i++) {
+    if (keys[i] !== "host" &&
+      keys[i] !== "accept-encoding" &&
+      keys[i] !== "connection" &&
+      keys[i] !== "origin") {
+      signedRequest.headers[keys[i]] = headers[keys[i]];
+    }
+  }
+
+  const client = new NodeHttpHandler();
+
   return new Promise((resolve, reject) => {
-    var req = new AWS.HttpRequest(endpoint);
-
-    if(options.quiet !== true) {
-      console.log('>>>', method, path);
-    }
-
-    req.method = method || 'GET';
-    req.path = path;
-    req.region = region;
-    req.body = body;
-
-    req.headers['presigned-expires'] = false;
-    req.headers.Host = endpoint.host;
-
-    var signer = new AWS.Signers.V4(req, 'es');
-    signer.addAuthorization(creds, new Date());
-
-    // Now we have signed the "headers", we add extra headers passing
-    // from the browser.  We must strip any connection control, transport encoding
-    // incorrect Origin headers, and make sure we don't change the Host header from
-    // the one used for signing
-    var keys = Object.keys(headers)
-    for (var i = 0, len = keys.length; i < len; i++) {
-      if (keys[i] != "host" && 
-        keys[i] != "accept-encoding" &&
-        keys[i] != "connection" &&
-        keys[i] != "origin") {
-        req.headers[keys[i]] = headers[keys[i]];
-      }
-    }
-
-    var client = new AWS.NodeHttpClient();
-    client.handleRequest(req, null, (httpResp) => {
-      var body = '';
-      httpResp.on('data', (chunk) => {
-        body += chunk;
-      });
-      httpResp.on('end', (chunk) => {
-        resolve({
-          statusCode: httpResp.statusCode,
-          headers: httpResp.headers,
-          body: body
+    client.handle(signedRequest)
+      .then(({ response }) => {
+        let body = '';
+        response.body.on('data', (chunk) => {
+          body += chunk;
         });
+        response.body.on('end', () => {
+          resolve({
+            statusCode: response.statusCode,
+            headers: response.headers,
+            body: body
+          });
+        });
+      })
+      .catch((err) => {
+        console.log('Error: ' + err);
+        reject(err);
       });
-    }, (err) => {
-      console.log('Error: ' + err);
-      reject(err);
-    });
   });
-};
+}
 
-var readBody = function(request) {
-  return new Promise(resolve => {
-    var body = [];
-
-    request.on('data', chunk => {
-      body.push(chunk);
-    });
-
-    request.on('end', _ => {
-      resolve(Buffer.concat(body).toString());
-    });
-  });
-};
-
-var requestHandler = function(request, response) {
-  var body = [];
+async function requestHandler(request, response) {
+  const body = [];
 
   request.on('data', chunk => {
     body.push(chunk);
   });
 
-  request.on('end', _ => {
-    var buf = Buffer.concat(body).toString();
+  request.on('end', async () => {
+    const buf = Buffer.concat(body).toString();
 
-    co(function*(){
-        return yield execute(context.endpoint, context.region, request.url, request.headers, request.method, buf);
-      })
-      .then(resp => {
-        // We need to pass through the response headers from the origin
-        // back to the UA, but strip any connection control and content encoding
-        // headers
-        var headers = {}
-        var keys = Object.keys(resp.headers);
-        for (var i = 0, klen = keys.length; i < klen; i++) {
-          var k = keys[i]; 
-          if (k != undefined && k != "connection" && k != "content-encoding") {
-            headers[k] = resp.headers[keys[i]];
-          }
+    try {
+      const resp = await execute(context.endpoint, context.region, request.url, request.headers, request.method, buf);
+
+      // Pass through response headers, stripping connection control and content encoding
+      const headers = {};
+      const keys = Object.keys(resp.headers);
+      for (let i = 0, klen = keys.length; i < klen; i++) {
+        const k = keys[i];
+        if (k !== undefined && k !== "connection" && k !== "content-encoding") {
+          headers[k] = resp.headers[keys[i]];
         }
+      }
 
-        response.writeHead(resp.statusCode, headers);
-        response.end(resp.body);
-      })
-      .catch(err => {
-        console.log('Unexpected error:', err.message);
-        console.log(err.stack);
+      response.writeHead(resp.statusCode, headers);
+      response.end(resp.body);
+    } catch (err) {
+      console.log('Unexpected error:', err.message);
+      console.log(err.stack);
 
-        response.writeHead(500, { 'Content-Type': 'application/json' });
-        response.end(err);
-      });
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: err.message }));
+    }
   });
-};
+}
 
-var server = http.createServer(requestHandler);
+const server = http.createServer(requestHandler);
 
-var startServer = function() {
+async function startServer() {
   return new Promise((resolve) => {
     server.listen(context.port, function(){
       console.log('Listening on', context.port);
       resolve();
     });
   });
-};
+}
 
+async function main() {
+  try {
+    const maybeUrl = argv._[0];
+    context.region = argv.region || 'eu-west-1';
+    context.port = argv.port || 9200;
 
-var main = function() {
-  co(function*(){
-      var maybeUrl = options._[0];
-      context.region = options.region || 'eu-west-1';
-      context.port = options.port || 9200;
-
-      if(!maybeUrl || (maybeUrl && maybeUrl == 'help') || options.help || options.h) {
-        console.log('Usage: aws-es-proxy [options] <url>');
-        console.log();
-        console.log('Options:');
-        console.log("\t--profile \tAWS profile \t(Default: default)");
-        console.log("\t--region \tAWS region \t(Default: eu-west-1)");
-        console.log("\t--port  \tLocal port \t(Default: 9200)");
-        console.log("\t--quiet  \tLog less");
-        process.exit(1);
-      }
-
-      if(maybeUrl && maybeUrl.indexOf('http') === 0) {
-        var uri = url.parse(maybeUrl);
-        context.endpoint = new AWS.Endpoint(uri.host);
-      }
-
-      var chain = new AWS.CredentialProviderChain();
-      yield chain.resolvePromise()
-        .then(function (credentials) {
-          creds = credentials;
-        })
-        .catch(function (err) {
-          console.log('Error while getting AWS Credentials.')
-          console.log(err);
-          process.exit(1);
-        });
-
-      yield startServer();
-    })
-    .then(res => {
-      // start service
-      console.log('Service started!');
-    })
-    .catch(err => {
-      console.error('Error:', err.message);
-      console.log(err.stack);
+    if(!maybeUrl || (maybeUrl && maybeUrl === 'help') || argv.help || argv.h) {
+      console.log('Usage: aws-es-proxy [options] <url>');
+      console.log();
+      console.log('Options:');
+      console.log("\t--profile \tAWS profile \t(Default: default)");
+      console.log("\t--region \tAWS region \t(Default: eu-west-1)");
+      console.log("\t--port  \tLocal port \t(Default: 9200)");
+      console.log("\t--quiet  \tLog less");
       process.exit(1);
+    }
+
+    if(maybeUrl && maybeUrl.indexOf('http') === 0) {
+      const uri = url.parse(maybeUrl);
+      context.endpoint = uri.host;
+    }
+
+    const credentialProvider = fromNodeProviderChain({
+      profile: profile
     });
-};
+
+    try {
+      creds = await credentialProvider();
+    } catch (err) {
+      console.log('Error while getting AWS Credentials.');
+      console.log(err);
+      process.exit(1);
+    }
+
+    await startServer();
+    console.log('Service started!');
+  } catch (err) {
+    console.error('Error:', err.message);
+    console.log(err.stack);
+    process.exit(1);
+  }
+}
 
 if(!module.parent) {
   main();

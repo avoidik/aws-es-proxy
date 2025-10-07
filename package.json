@@ -1,6 +1,6 @@
 {
   "name": "aws-es-proxy",
-  "version": "1.0.4",
+  "version": "2.0.0",
   "description": "Simple Local AWS ElasticSearch Service proxy",
   "main": "index.js",
   "repository": {
@@ -16,11 +16,14 @@
   "author": "Joona Kulmala <jmkulmala@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.149.0",
-    "co": "^4.6.0",
-    "optimist": "^0.6.1"
+    "@aws-sdk/credential-providers": "^3.901.0",
+    "@smithy/signature-v4": "^5.3.0",
+    "@smithy/protocol-http": "^5.3.0",
+    "@smithy/node-http-handler": "^4.3.0",
+    "@aws-crypto/sha256-js": "^5.2.0",
+    "yargs": "^17.7.2"
   },
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=18.0.0"
   }
 }
