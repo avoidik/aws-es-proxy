@@ -63,16 +63,19 @@ async function execute(endpoint, region, path, headers, method, body) {
   return new Promise((resolve, reject) => {
     client.handle(signedRequest)
       .then(({ response }) => {
-        let body = '';
+        const chunks = [];
         response.body.on('data', (chunk) => {
-          body += chunk;
+          chunks.push(chunk);
         });
         response.body.on('end', () => {
           resolve({
             statusCode: response.statusCode,
             headers: response.headers,
-            body: body
+            body: Buffer.concat(chunks)
           });
+        });
+        response.body.on('error', (err) => {
+          reject(err);
         });
       })
       .catch((err) => {
@@ -85,12 +88,18 @@ async function execute(endpoint, region, path, headers, method, body) {
 async function requestHandler(request, response) {
   const body = [];
 
+  request.on('error', (err) => {
+    console.log('Request error:', err.message);
+    response.writeHead(400, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({ error: 'Bad request' }));
+  });
+
   request.on('data', chunk => {
     body.push(chunk);
   });
 
   request.on('end', async () => {
-    const buf = Buffer.concat(body).toString();
+    const buf = Buffer.concat(body);
 
     try {
       const resp = await execute(context.endpoint, context.region, request.url, request.headers, request.method, buf);
@@ -148,6 +157,13 @@ async function main() {
     if(maybeUrl && maybeUrl.indexOf('http') === 0) {
       const uri = url.parse(maybeUrl);
       context.endpoint = uri.host;
+    } else if(maybeUrl) {
+      context.endpoint = maybeUrl;
+    }
+
+    if(!context.endpoint) {
+      console.log('Error: Elasticsearch endpoint URL is required');
+      process.exit(1);
     }
 
     const credentialProvider = fromNodeProviderChain({
