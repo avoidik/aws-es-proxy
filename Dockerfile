@@ -1,18 +1,24 @@
-FROM node:6
+FROM node:22-slim
 
-ENV TINI_VERSION v0.14.0
-
-RUN mkdir -p /usr/src/app
+# Create app directory
 WORKDIR /usr/src/app
 
-ENV NODE_ENV production
-ADD package.json /usr/src/app/
-RUN npm install && npm cache clean
-COPY . /usr/src/app
+# Install app dependencies using npm ci for reproducible builds
+COPY package*.json ./
+RUN npm ci --only=production && \
+    npm cache clean --force
 
-# Add Tini
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod +x /tini
-ENTRYPOINT ["/tini", "bin/aws-es-proxy", "--"]
+# Copy app source
+COPY . .
+
+# Create non-root user and switch to it
+RUN useradd -m -u 1001 appuser && \
+    chown -R appuser:appuser /usr/src/app
+USER appuser
+
+ENV NODE_ENV=production
 
 EXPOSE 9200
+
+# Use CMD instead of ENTRYPOINT to allow argument override
+CMD ["node", "index.js"]
