@@ -122,21 +122,19 @@ async function requestHandler(request, response) {
     const buf = Buffer.concat(body);
 
     try {
-      // Handle OpenSearch Dashboards Dev Tools proxy requests
+      // Handle proxy requests with path/method query parameters (e.g., Dev Tools)
       let targetPath = request.url;
       let targetMethod = request.method;
 
-      if (request.url && request.url.includes('/_dashboards/api/console/proxy')) {
-        const parsedUrl = new URL(request.url, `http://localhost:${context.port}`);
-        const pathParam = parsedUrl.searchParams.get('path');
-        const methodParam = parsedUrl.searchParams.get('method');
+      const parsedUrl = new URL(request.url, `http://localhost:${context.port}`);
+      const pathParam = parsedUrl.searchParams.get('path');
+      const methodParam = parsedUrl.searchParams.get('method');
 
-        if (pathParam) {
-          targetPath = pathParam;
-        }
-        if (methodParam) {
-          targetMethod = methodParam;
-        }
+      if (pathParam) {
+        targetPath = pathParam;
+      }
+      if (methodParam) {
+        targetMethod = methodParam;
       }
 
       const resp = await execute(context.endpoint, context.region, targetPath, request.headers, targetMethod, buf);
