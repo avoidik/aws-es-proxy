@@ -1,0 +1,242 @@
+[
+  {
+    "asset_id": "SRV-001",
+    "hostname": "web-server-01.example.com",
+    "asset_type": "server",
+    "category": "compute",
+    "manufacturer": "Dell",
+    "model": "PowerEdge R740",
+    "serial_number": "SN123456789",
+    "ip_address": "10.0.1.10",
+    "mac_address": "00:1A:2B:3C:4D:5E",
+    "location": {
+      "building": "HQ",
+      "floor": "2",
+      "room": "DC-201",
+      "rack": "R15"
+    },
+    "owner": {
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "department": "Engineering"
+    },
+    "status": "active",
+    "operating_system": "Ubuntu 22.04 LTS",
+    "cpu": {
+      "model": "Intel Xeon Gold 6248",
+      "cores": 16,
+      "speed_ghz": 2.5
+    },
+    "memory_gb": 128,
+    "storage_gb": 2000,
+    "purchase_date": "2023-01-15",
+    "warranty_expiry": "2026-01-15",
+    "last_maintenance": "2024-09-01",
+    "cost": 8500.00,
+    "tags": [
+      "production",
+      "web",
+      "critical"
+    ],
+    "notes": "Primary web application server",
+    "created_at": "2024-10-07T00:00:00Z",
+    "updated_at": "2024-10-07T00:00:00Z"
+  },
+  {
+    "asset_id": "NET-001",
+    "hostname": "core-switch-01",
+    "asset_type": "network",
+    "category": "infrastructure",
+    "manufacturer": "Cisco",
+    "model": "Catalyst 9300",
+    "serial_number": "SN987654321",
+    "ip_address": "10.0.0.1",
+    "mac_address": "00:A1:B2:C3:D4:E5",
+    "location": {
+      "building": "HQ",
+      "floor": "2",
+      "room": "DC-201",
+      "rack": "R01"
+    },
+    "owner": {
+      "name": "Jane Smith",
+      "email": "jane.smith@example.com",
+      "department": "Network Operations"
+    },
+    "status": "active",
+    "operating_system": "IOS XE 17.6.1",
+    "purchase_date": "2022-06-10",
+    "warranty_expiry": "2025-06-10",
+    "last_maintenance": "2024-08-15",
+    "cost": 12000.00,
+    "tags": [
+      "production",
+      "core",
+      "critical"
+    ],
+    "notes": "Core network switch for building HQ",
+    "created_at": "2024-10-07T00:00:00Z",
+    "updated_at": "2024-10-07T00:00:00Z"
+  },
+  {
+    "asset_id": "WKS-101",
+    "hostname": "dev-laptop-101",
+    "asset_type": "workstation",
+    "category": "endpoint",
+    "manufacturer": "Apple",
+    "model": "MacBook Pro 16-inch",
+    "serial_number": "SN456789012",
+    "mac_address": "A4:B5:C6:D7:E8:F9",
+    "location": {
+      "building": "HQ",
+      "floor": "3",
+      "room": "Office-305"
+    },
+    "owner": {
+      "name": "Bob Johnson",
+      "email": "bob.johnson@example.com",
+      "department": "Engineering"
+    },
+    "status": "active",
+    "operating_system": "macOS 14.0 Sonoma",
+    "cpu": {
+      "model": "Apple M3 Pro",
+      "cores": 12,
+      "speed_ghz": 3.5
+    },
+    "memory_gb": 32,
+    "storage_gb": 1000,
+    "purchase_date": "2024-02-20",
+    "warranty_expiry": "2027-02-20",
+    "cost": 3200.00,
+    "tags": [
+      "development",
+      "mobile"
+    ],
+    "notes": "Developer workstation",
+    "created_at": "2024-10-07T00:00:00Z",
+    "updated_at": "2024-10-07T00:00:00Z"
+  },
+  {
+    "asset_id": "SRV-002",
+    "hostname": "db-server-01.example.com",
+    "asset_type": "server",
+    "category": "compute",
+    "manufacturer": "HPE",
+    "model": "ProLiant DL380 Gen10",
+    "serial_number": "SN789012345",
+    "ip_address": "10.0.2.20",
+    "mac_address": "00:2B:3C:4D:5E:6F",
+    "location": {
+      "building": "HQ",
+      "floor": "2",
+      "room": "DC-201",
+      "rack": "R16"
+    },
+    "owner": {
+      "name": "Alice Chen",
+      "email": "alice.chen@example.com",
+      "department": "Database Administration"
+    },
+    "status": "active",
+    "operating_system": "Red Hat Enterprise Linux 9",
+    "cpu": {
+      "model": "Intel Xeon Gold 6248R",
+      "cores": 24,
+      "speed_ghz": 3.0
+    },
+    "memory_gb": 256,
+    "storage_gb": 8000,
+    "purchase_date": "2023-05-10",
+    "warranty_expiry": "2026-05-10",
+    "last_maintenance": "2024-10-01",
+    "cost": 15000.00,
+    "tags": [
+      "production",
+      "database",
+      "critical"
+    ],
+    "notes": "Primary PostgreSQL database server",
+    "created_at": "2024-10-07T00:00:00Z",
+    "updated_at": "2024-10-07T00:00:00Z"
+  },
+  {
+    "asset_id": "STG-001",
+    "hostname": "nas-storage-01",
+    "asset_type": "storage",
+    "category": "storage",
+    "manufacturer": "Synology",
+    "model": "DS3622xs+",
+    "serial_number": "SN234567890",
+    "ip_address": "10.0.3.50",
+    "mac_address": "00:3C:4D:5E:6F:70",
+    "location": {
+      "building": "HQ",
+      "floor": "2",
+      "room": "DC-201",
+      "rack": "R10"
+    },
+    "owner": {
+      "name": "Tom Wilson",
+      "email": "tom.wilson@example.com",
+      "department": "IT Operations"
+    },
+    "status": "active",
+    "operating_system": "DiskStation Manager 7.2",
+    "storage_gb": 48000,
+    "purchase_date": "2023-03-01",
+    "warranty_expiry": "2026-03-01",
+    "last_maintenance": "2024-09-20",
+    "cost": 5500.00,
+    "tags": [
+      "production",
+      "backup",
+      "storage"
+    ],
+    "notes": "Network attached storage for backups",
+    "created_at": "2024-10-07T00:00:00Z",
+    "updated_at": "2024-10-07T00:00:00Z"
+  },
+  {
+    "asset_id": "WKS-102",
+    "hostname": "designer-ws-102",
+    "asset_type": "workstation",
+    "category": "endpoint",
+    "manufacturer": "Dell",
+    "model": "Precision 5820 Tower",
+    "serial_number": "SN567890123",
+    "ip_address": "10.0.4.102",
+    "mac_address": "A5:B6:C7:D8:E9:FA",
+    "location": {
+      "building": "HQ",
+      "floor": "4",
+      "room": "Studio-401"
+    },
+    "owner": {
+      "name": "Sarah Martinez",
+      "email": "sarah.martinez@example.com",
+      "department": "Design"
+    },
+    "status": "maintenance",
+    "operating_system": "Windows 11 Pro",
+    "cpu": {
+      "model": "Intel Core i9-12900K",
+      "cores": 16,
+      "speed_ghz": 3.2
+    },
+    "memory_gb": 64,
+    "storage_gb": 2000,
+    "purchase_date": "2023-08-15",
+    "warranty_expiry": "2026-08-15",
+    "last_maintenance": "2024-10-05",
+    "cost": 4200.00,
+    "tags": [
+      "design",
+      "workstation",
+      "high-performance"
+    ],
+    "notes": "Graphic design workstation, currently undergoing GPU upgrade",
+    "created_at": "2024-10-07T00:00:00Z",
+    "updated_at": "2024-10-07T00:00:00Z"
+  }
+]

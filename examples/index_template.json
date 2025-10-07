@@ -1,0 +1,132 @@
+{
+  "index_patterns": [
+    "asset-inventory-*"
+  ],
+  "template": {
+    "settings": {
+      "number_of_shards": 2,
+      "number_of_replicas": 1,
+      "index.lifecycle.name": "asset-inventory-policy",
+      "index.lifecycle.rollover_alias": "asset-inventory"
+    },
+    "mappings": {
+      "properties": {
+        "asset_id": {
+          "type": "keyword"
+        },
+        "hostname": {
+          "type": "keyword"
+        },
+        "asset_type": {
+          "type": "keyword"
+        },
+        "category": {
+          "type": "keyword"
+        },
+        "manufacturer": {
+          "type": "keyword"
+        },
+        "model": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "serial_number": {
+          "type": "keyword"
+        },
+        "ip_address": {
+          "type": "ip"
+        },
+        "mac_address": {
+          "type": "keyword"
+        },
+        "location": {
+          "properties": {
+            "building": {
+              "type": "keyword"
+            },
+            "floor": {
+              "type": "keyword"
+            },
+            "room": {
+              "type": "keyword"
+            },
+            "rack": {
+              "type": "keyword"
+            }
+          }
+        },
+        "owner": {
+          "properties": {
+            "name": {
+              "type": "text"
+            },
+            "email": {
+              "type": "keyword"
+            },
+            "department": {
+              "type": "keyword"
+            }
+          }
+        },
+        "status": {
+          "type": "keyword"
+        },
+        "operating_system": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "cpu": {
+          "properties": {
+            "model": {
+              "type": "text"
+            },
+            "cores": {
+              "type": "integer"
+            },
+            "speed_ghz": {
+              "type": "float"
+            }
+          }
+        },
+        "memory_gb": {
+          "type": "integer"
+        },
+        "storage_gb": {
+          "type": "integer"
+        },
+        "purchase_date": {
+          "type": "date"
+        },
+        "warranty_expiry": {
+          "type": "date"
+        },
+        "last_maintenance": {
+          "type": "date"
+        },
+        "cost": {
+          "type": "float"
+        },
+        "tags": {
+          "type": "keyword"
+        },
+        "notes": {
+          "type": "text"
+        },
+        "created_at": {
+          "type": "date"
+        },
+        "updated_at": {
+          "type": "date"
+        }
+      }
+    }
+  }
+}

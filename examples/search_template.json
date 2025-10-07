@@ -1,0 +1,47 @@
+{
+  "script": {
+    "lang": "mustache",
+    "source": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "{{#search_query}}multi_match{{/search_query}}{{^search_query}}match_all{{/search_query}}": {
+                "{{#search_query}}query{{/search_query}}": "{{search_query}}",
+                "{{#search_query}}fields{{/search_query}}": [
+                  "hostname",
+                  "model",
+                  "serial_number",
+                  "notes"
+                ]
+              }
+            }
+          ],
+          "filter": [
+            {
+              "{{#asset_type}}term{{/asset_type}}{{^asset_type}}match_all{{/asset_type}}": {
+                "{{#asset_type}}asset_type{{/asset_type}}": "{{asset_type}}"
+              }
+            },
+            {
+              "{{#status}}term{{/status}}{{^status}}match_all{{/status}}": {
+                "{{#status}}status{{/status}}": "{{status}}"
+              }
+            }
+          ]
+        }
+      },
+      "sort": [
+        {
+          "{{sort_field}}": {
+            "order": "{{sort_order}}"
+          }
+        }
+      ]
+    },
+    "params": {
+      "sort_field": "created_at",
+      "sort_order": "desc"
+    }
+  }
+}
