@@ -34,16 +34,30 @@ async function execute(endpoint, region, path, headers, method, body) {
   // Use port from URL if specified, otherwise use backend-port arg or default 443
   const backendPort = parsedUrl.port || context.backendPort || 443;
 
+  // Build headers before signing
+  const requestHeaders = {
+    'host': parsedUrl.hostname,
+    'presigned-expires': 'false'
+  };
+
+  // Add extra headers from the browser, excluding connection control and transport encoding
+  const keys = Object.keys(headers);
+  for (let i = 0, len = keys.length; i < len; i++) {
+    if (keys[i] !== "host" &&
+      keys[i] !== "accept-encoding" &&
+      keys[i] !== "connection" &&
+      keys[i] !== "origin") {
+      requestHeaders[keys[i]] = headers[keys[i]];
+    }
+  }
+
   const request = new HttpRequest({
     hostname: parsedUrl.hostname,
     port: backendPort,
     protocol: parsedUrl.protocol,
     path: path,
     method: method || 'GET',
-    headers: {
-      'host': parsedUrl.hostname,
-      'presigned-expires': 'false'
-    },
+    headers: requestHeaders,
     body: body
   });
 
@@ -55,17 +69,6 @@ async function execute(endpoint, region, path, headers, method, body) {
   });
 
   const signedRequest = await signer.sign(request);
-
-  // Add extra headers from the browser, excluding connection control and transport encoding
-  const keys = Object.keys(headers);
-  for (let i = 0, len = keys.length; i < len; i++) {
-    if (keys[i] !== "host" &&
-      keys[i] !== "accept-encoding" &&
-      keys[i] !== "connection" &&
-      keys[i] !== "origin") {
-      signedRequest.headers[keys[i]] = headers[keys[i]];
-    }
-  }
 
   const client = new NodeHttpHandler();
 
