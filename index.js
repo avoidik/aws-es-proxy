@@ -36,8 +36,7 @@ async function execute(endpoint, region, path, headers, method, body) {
 
   // Build headers before signing
   const requestHeaders = {
-    'host': parsedUrl.hostname,
-    'presigned-expires': 'false'
+    'host': parsedUrl.hostname
   };
 
   // Add extra headers from the browser, excluding connection control and transport encoding
@@ -49,6 +48,11 @@ async function execute(endpoint, region, path, headers, method, body) {
       keys[i] !== "origin") {
       requestHeaders[keys[i]] = headers[keys[i]];
     }
+  }
+
+  // Ensure content-type is set if there's a body
+  if (body && body.length > 0 && !requestHeaders['content-type']) {
+    requestHeaders['content-type'] = 'application/json';
   }
 
   const request = new HttpRequest({
@@ -68,7 +72,11 @@ async function execute(endpoint, region, path, headers, method, body) {
     sha256: Sha256
   });
 
-  const signedRequest = await signer.sign(request);
+  const signedRequest = await signer.sign(request, {
+    signingDate: new Date(),
+    signingRegion: region,
+    signingService: 'es'
+  });
 
   const client = new NodeHttpHandler();
 
