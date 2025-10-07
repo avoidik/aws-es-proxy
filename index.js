@@ -23,11 +23,20 @@ async function execute(endpoint, region, path, headers, method, body) {
     console.log('>>>', method, path);
   }
 
-  const parsedUrl = new URL(`https://${endpoint}`);
+  // Parse endpoint - add protocol if not present
+  let endpointUrl = endpoint;
+  if (!endpoint.match(/^https?:\/\//)) {
+    endpointUrl = `https://${endpoint}`;
+  }
+
+  const parsedUrl = new URL(endpointUrl);
+
+  // Use port from URL if specified, otherwise use backend-port arg or default 443
+  const backendPort = parsedUrl.port || context.backendPort || 443;
 
   const request = new HttpRequest({
     hostname: parsedUrl.hostname,
-    port: parsedUrl.port || 443,
+    port: backendPort,
     protocol: parsedUrl.protocol,
     path: path,
     method: method || 'GET',
@@ -142,15 +151,17 @@ async function main() {
     const maybeUrl = argv._[0];
     context.region = argv.region || 'eu-west-1';
     context.port = argv.port || 9200;
+    context.backendPort = argv['backend-port'];
 
     if(!maybeUrl || (maybeUrl && maybeUrl === 'help') || argv.help || argv.h) {
       console.log('Usage: aws-es-proxy [options] <url>');
       console.log();
       console.log('Options:');
-      console.log("\t--profile \tAWS profile \t(Default: default)");
-      console.log("\t--region \tAWS region \t(Default: eu-west-1)");
-      console.log("\t--port  \tLocal port \t(Default: 9200)");
-      console.log("\t--quiet  \tLog less");
+      console.log("\t--profile \t\tAWS profile \t\t(Default: default)");
+      console.log("\t--region \t\tAWS region \t\t(Default: eu-west-1)");
+      console.log("\t--port  \t\tLocal proxy port \t(Default: 9200)");
+      console.log("\t--backend-port \t\tBackend ES port \t(Default: 443)");
+      console.log("\t--quiet  \t\tLog less");
       process.exit(1);
     }
 
